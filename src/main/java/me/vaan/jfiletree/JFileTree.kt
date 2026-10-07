@@ -36,6 +36,7 @@ class JFileTree : Element {
         ).title("ABC")
             .scrollbar()
             .rounded()
+            .focusable()
         /*
         runBlocking {
             val treeCore: TreeNode<FileInfo> =
@@ -69,28 +70,7 @@ class JFileTree : Element {
     }
 
     override fun handleKeyEvent(event: KeyEvent?, focused: Boolean): EventResult {
-        event ?: return EventResult.UNHANDLED
-        if (event.isUp) {
-            treeElement.selectNext()
-            return EventResult.HANDLED
-        }
-
-        if (event.isDown) {
-            treeElement.selectPrevious()
-            return EventResult.HANDLED
-        }
-
-        if (event.isLeft) {
-            treeElement.collapseSelected()
-            return EventResult.HANDLED
-        }
-
-        if (event.isRight) {
-            treeElement.expandSelected()
-            return EventResult.HANDLED
-        }
-
-        return EventResult.UNHANDLED
+        return treeElement.handleKeyEvent(event, focused)
     }
 
     override fun preferredSize(
