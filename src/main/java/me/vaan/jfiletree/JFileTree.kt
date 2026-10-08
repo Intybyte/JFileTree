@@ -3,11 +3,7 @@ package me.vaan.jfiletree
 import dev.tamboui.layout.Rect
 import dev.tamboui.style.Color
 import dev.tamboui.terminal.Frame
-import dev.tamboui.toolkit.Toolkit.row
-import dev.tamboui.toolkit.Toolkit.spacer
-import dev.tamboui.toolkit.Toolkit.text
-import dev.tamboui.toolkit.Toolkit.tree
-import dev.tamboui.toolkit.app.ToolkitRunner
+import dev.tamboui.toolkit.Toolkit.*
 import dev.tamboui.toolkit.element.Element
 import dev.tamboui.toolkit.element.RenderContext
 import dev.tamboui.toolkit.element.Size
@@ -21,32 +17,23 @@ import me.vaan.jfiletree.partition.PartitionVolume
 
 class JFileTree : Element {
 
-    private val part = PartitionVolume.getAllPartitionVolumes()[0]
 
-    private val treeElement: TreeElement<String> by lazy {
-        tree(TreeNode.of("A", "A").expanded()
-            .add(TreeNode.of("AA", "AA").expanded().leaf())
-            .add(TreeNode.of("AA", "AA").expanded().leaf())
-            .add(TreeNode.of("AA", "AA").expanded().leaf())
-            .add(TreeNode.of("BB", "BB").expanded()
-                .add(TreeNode.of("BB", "BB").expanded().leaf())
-                .add(TreeNode.of("BB", "BB").expanded().leaf())
-                .add(TreeNode.of("BB", "BB").expanded().leaf())
-            )
-        ).title("ABC")
-            .scrollbar()
-            .rounded()
-            .focusable()
-        /*
-        runBlocking {
-            val treeCore: TreeNode<FileInfo> =
-                part.mountPoints[0].toComponent()
+    fun treeElement(): TreeElement<FileInfo> {
+        return runBlocking {
+            val treeCore: List<TreeNode<FileInfo>> =
+                PartitionVolume.partitionVolumes.flatMap {
+                    it.mountPoints
+                }.map {
+                    it.toComponent()
+                }
 
-            tree(treeCore)
-                .title("Test")
+            val treeCoreArray = treeCore.toTypedArray()
+            return@runBlocking tree(*treeCoreArray)
+                .title("JFileTree")
                 .rounded()
                 .highlightColor(Color.CYAN)
                 .scrollbar()
+                .focusable()
                 .nodeRenderer { node: TreeNode<FileInfo> ->
                     val data = node.data()
 
@@ -56,21 +43,22 @@ class JFileTree : Element {
                         spacer()
                     )
                 }
-        }*/
+        }
     }
 
-
+    var treeElement: TreeElement<FileInfo>? = null
 
     override fun render(
         frame: Frame?,
         area: Rect?,
         context: RenderContext?
     ) {
-        treeElement.render(frame, area, context)
+        treeElement = treeElement()
+        treeElement!!.render(frame, area, context)
     }
 
     override fun handleKeyEvent(event: KeyEvent?, focused: Boolean): EventResult {
-        return treeElement.handleKeyEvent(event, focused)
+        return treeElement?.handleKeyEvent(event, focused) ?: EventResult.UNHANDLED
     }
 
     override fun preferredSize(

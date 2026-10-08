@@ -23,7 +23,7 @@ class PartitionVolume {
     }
 
     companion object {
-        fun getAllPartitionVolumes() : List<PartitionVolume> {
+        val partitionVolumes : List<PartitionVolume>  by lazy {
             val out = mutableListOf<PartitionVolume>()
             val mounts: MutableMap<FileStore, MutableList<Path>> = HashMap()
 
@@ -45,7 +45,7 @@ class PartitionVolume {
                 out.add(toAdd)
             }
 
-            return out
+            out
         }
     }
 }

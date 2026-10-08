@@ -1,8 +1,8 @@
 package me.vaan.jfiletree.scan
 
-enum class ScanState {
-    IN_PROGRESS,
+enum class ScanState(val isComplete: Boolean = true) {
+    IN_PROGRESS(false),
     SUCCESS,
     INSUFFICIENT_PERMISSION,
-    ERROR
+    ERROR;
 }

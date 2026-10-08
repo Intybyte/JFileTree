@@ -21,11 +21,14 @@ class ScanResult(val state: AtomicReference<ScanState>, val children: Deferred<L
         private val scope = CoroutineScope(Dispatchers.IO)
 
         fun of(path: Path): ScanResult {
-            val state = AtomicReference(ScanState.IN_PROGRESS)
             val type = path.type()
+            val state = AtomicReference(
+                if (type != FileType.DIRECTORY) ScanState.SUCCESS else ScanState.IN_PROGRESS
+            )
 
-
-            val children: Deferred<List<FileInfo>> = if (type != FileType.DIRECTORY) CompletableDeferred(emptyList()) else scope.async {
+            val children: Deferred<List<FileInfo>> = if (type != FileType.DIRECTORY) {
+                CompletableDeferred(emptyList())
+            } else scope.async {
 
                 try {
                     val paths = Files.list(path).use { stream ->

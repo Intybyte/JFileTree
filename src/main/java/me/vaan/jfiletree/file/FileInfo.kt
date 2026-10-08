@@ -3,14 +3,12 @@ package me.vaan.jfiletree.file
 import dev.tamboui.widgets.tree.TreeNode
 import kotlinx.coroutines.*
 import me.vaan.jfiletree.scan.ScanResult
-import me.vaan.jfiletree.scan.ScanState
 import me.vaan.jfiletree.type
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.fileSize
 import kotlin.io.path.name
 
-data class FileInfo (
+class FileInfo (
     val name: String,
     val absolutePath: Path,
     val type: FileType,
@@ -18,19 +16,34 @@ data class FileInfo (
     val childScan: ScanResult
 ) {
 
-    fun toComponent(): TreeNode<FileInfo> {
-        if (type != FileType.DIRECTORY) {
-            return TreeNode.of(name, this).expanded().leaf()
-        }
+    private var componentTree: TreeNode<FileInfo>? = null
+    private var childrenAdded = false
 
-        val root = TreeNode.of(name, this).expanded()
-        runBlocking {
-            childScan.children.await().forEach { child ->
-                root.add(child.toComponent())
+    fun toComponent(): TreeNode<FileInfo> {
+        if (componentTree == null) {
+            componentTree = if (type != FileType.DIRECTORY) {
+                TreeNode.of(name, this).leaf()
+            } else {
+                TreeNode.of(name, this)
             }
         }
 
-        return root
+        val tree = componentTree!!
+
+        if (type == FileType.DIRECTORY &&
+            !childrenAdded &&
+            childScan.state.get().isComplete
+        ) {
+            runBlocking {
+                childScan.children.await().forEach { child ->
+                    tree.add(child.toComponent())
+                }
+            }
+
+            childrenAdded = true
+        }
+
+        return tree
     }
 
     companion object {
