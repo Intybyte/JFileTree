@@ -40,9 +40,11 @@ object Main {
                 .tickRate(Duration.ofMillis(50))
                 .build()
 
+            val tree = JFileTree()
+
             ToolkitRunner.create(config).use { runner ->
                 runner.run {
-                    JFileTree()
+                    tree
                 }
             }
 
