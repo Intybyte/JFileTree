@@ -1,5 +1,6 @@
 package me.vaan.jfiletree
 
+import dev.tamboui.layout.Constraint
 import dev.tamboui.layout.Rect
 import dev.tamboui.style.Color
 import dev.tamboui.terminal.Frame
@@ -11,9 +12,13 @@ import dev.tamboui.toolkit.elements.TreeElement
 import dev.tamboui.toolkit.event.EventResult
 import dev.tamboui.tui.event.KeyEvent
 import dev.tamboui.widgets.tree.TreeNode
+import dev.tamboui.widgets.tree.TreeState
 import kotlinx.coroutines.runBlocking
 import me.vaan.jfiletree.file.FileInfo
 import me.vaan.jfiletree.partition.PartitionVolume
+import kotlin.Boolean
+import kotlin.Int
+
 
 class JFileTree : Element {
 
@@ -47,6 +52,7 @@ class JFileTree : Element {
     }
 
     var treeElement: TreeElement<FileInfo>? = null
+    var treeState: TreeState? = null
 
     override fun render(
         frame: Frame?,
@@ -54,7 +60,17 @@ class JFileTree : Element {
         context: RenderContext?
     ) {
         treeElement = treeElement()
-        treeElement!!.render(frame, area, context)
+        if (treeState == null) {
+            treeState = treeElement!!.state
+        } else {
+            treeElement!!.state = treeState!!
+        }
+
+        val ui = dock()
+            .center(treeElement)
+            .bottom(messageBar(), Constraint.length(1))
+
+        ui.render(frame, area, context)
     }
 
     override fun handleKeyEvent(event: KeyEvent?, focused: Boolean): EventResult {
@@ -67,9 +83,13 @@ class JFileTree : Element {
         context: RenderContext?
     ): Size = Size.UNKNOWN
 
-    override fun isFocusable(): Boolean = true
+    private fun messageBar(): Element {
+        val tasks = GlobalData.getTasksRunning()
+        val out = if (tasks == 0) "No tasks running" else "There are $tasks running tasks"
 
-    override fun id(): String {
-        return "MAINID"
+        return row(
+            text(out).fill(),
+            //text("[Enter] Open  [v] View  [Backspace] Up  [+] Mark All  [-] Unmark").dim()
+        ).length(1)
     }
 }

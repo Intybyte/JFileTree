@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import me.vaan.jfiletree.GlobalData
 import me.vaan.jfiletree.file.FileInfo
 import me.vaan.jfiletree.file.FileType
 import me.vaan.jfiletree.type
@@ -29,7 +30,7 @@ class ScanResult(val state: AtomicReference<ScanState>, val children: Deferred<L
             val children: Deferred<List<FileInfo>> = if (type != FileType.DIRECTORY) {
                 CompletableDeferred(emptyList())
             } else scope.async {
-
+                GlobalData.increaseTasksRunning()
                 try {
                     val paths = Files.list(path).use { stream ->
                         stream.toList()
@@ -37,12 +38,15 @@ class ScanResult(val state: AtomicReference<ScanState>, val children: Deferred<L
 
                     val result = paths.map { FileInfo.of(it) }
                     state.set(ScanState.SUCCESS)
+                    GlobalData.decreaseTasksRunning()
                     result
                 } catch (_: AccessDeniedException) {
                     state.set(ScanState.INSUFFICIENT_PERMISSION)
+                    GlobalData.decreaseTasksRunning()
                     listOf()
                 } catch (e: IOException) {
                     state.set(ScanState.ERROR)
+                    GlobalData.decreaseTasksRunning()
                     println("CAPTURED ERROR")
                     e.printStackTrace()
                     listOf()
