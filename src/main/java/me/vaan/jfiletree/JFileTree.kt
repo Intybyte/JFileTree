@@ -38,7 +38,7 @@ class JFileTree : Element {
                     val data = node.data()
 
                     row(
-                        text(data.type.display() + " "),
+                        text(data.type.display(node) + " "),
                         text(node.label()).bold(),
                         spacer()
                     )
